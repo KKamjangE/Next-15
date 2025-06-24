@@ -8,24 +8,29 @@ import { useState } from "react";
 import { makeQueryClient } from "./query-client";
 import type { AppRouter } from "./routers/_app";
 import superjson from "superjson";
-export const trpc = createTRPCReact<AppRouter>();
+export const trpc = createTRPCReact<AppRouter>(); // trpc react 클라이언트 생성
+
+// Query Client 싱글톤 패턴
 let clientQueryClientSingleton: QueryClient;
 function getQueryClient() {
   if (typeof window === "undefined") {
-    // Server: always make a new query client
+    // Server: 항상 새로운 쿼리 클라이언트 생성
     return makeQueryClient();
   }
-  // Browser: use singleton pattern to keep the same query client
+  // Browser: 싱글톤 패턴으로 동일한 쿼리 클라이언트 유지
   return (clientQueryClientSingleton ??= makeQueryClient());
 }
+
+// URL을 동적으로 생성하는 함수
 function getUrl() {
   const base = (() => {
-    if (typeof window !== "undefined") return "";
-    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-    return "http://localhost:3000";
+    if (typeof window !== "undefined") return ""; // 브라우저 환경
+    if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // vercel 환경
+    return "http://localhost:3000"; // 개발 환경
   })();
   return `${base}/api/trpc`;
 }
+
 export function TRPCProvider(
   props: Readonly<{
     children: React.ReactNode;
