@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "../init";
+import { baseProcedure, createTRPCRouter, protectedProcedure } from "../init";
 export const appRouter = createTRPCRouter({
   hello: protectedProcedure
     .input(
@@ -8,7 +8,7 @@ export const appRouter = createTRPCRouter({
       })
     ) // 입력 스키마
     .query((opts) => {
-      console.log(opts.ctx.clerkUserId);
+      console.log({ dbUser: opts.ctx.user });
       return {
         greeting: `hello ${opts.input.text}`,
       };
