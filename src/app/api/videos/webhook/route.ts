@@ -3,6 +3,7 @@ import { videos } from "@/db/schema";
 import { mux } from "@/lib/mux";
 import {
   VideoAssetCreatedWebhookEvent,
+  VideoAssetDeletedWebhookEvent,
   VideoAssetErroredWebhookEvent,
   VideoAssetReadyWebhookEvent,
   VideoAssetTrackReadyWebhookEvent,
@@ -16,7 +17,8 @@ type WebhookEvent =
   | VideoAssetCreatedWebhookEvent
   | VideoAssetReadyWebhookEvent
   | VideoAssetErroredWebhookEvent
-  | VideoAssetTrackReadyWebhookEvent;
+  | VideoAssetTrackReadyWebhookEvent
+  | VideoAssetDeletedWebhookEvent;
 
 export const POST = async (request: Request) => {
   if (!SIGNING_SECRET) {
@@ -58,6 +60,7 @@ export const POST = async (request: Request) => {
         .where(eq(videos.muxUploadId, data.upload_id));
       break;
     }
+
     case "video.asset.ready": {
       const data = payload.data as VideoAssetReadyWebhookEvent["data"];
       const playbackId = data.playback_ids?.[0].id;
@@ -86,6 +89,32 @@ export const POST = async (request: Request) => {
         })
         .where(eq(videos.muxUploadId, data.upload_id));
       break;
+    }
+
+    case "video.asset.errored": {
+      const data = payload.data as VideoAssetErroredWebhookEvent["data"];
+
+      if (!data.upload_id) {
+        return new Response("Missing upload ID", { status: 400 });
+      }
+
+      await db
+        .update(videos)
+        .set({
+          muxStatus: data.status,
+        })
+        .where(eq(videos.muxUploadId, data.upload_id));
+      break;
+    }
+
+    case "video.asset.deleted": {
+      const data = payload.data as VideoAssetDeletedWebhookEvent["data"];
+
+      if (!data.upload_id) {
+        return new Response("Missing upload ID", { status: 400 });
+      }
+
+      await db.delete(videos).where(eq(videos.muxUploadId, data.upload_id));
     }
   }
 
