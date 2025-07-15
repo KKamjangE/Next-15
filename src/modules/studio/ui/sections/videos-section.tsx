@@ -68,7 +68,7 @@ const VideosSectionSuspense = () => {
                             imageUrl={video.thumbnailUrl}
                             previewUrl={video.previewUrl}
                             title={video.title}
-                            duration={video.duration || 0}
+                            duration={video.duration}
                           />
                         </div>
                         <div className="flex flex-col overflow-hidden gap-y-1">
